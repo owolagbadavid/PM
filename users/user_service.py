@@ -12,8 +12,12 @@ def create_user(user_dto):
 
 
 def get_user_by_id(id: int) -> User:
-    return User.query.filter_by(id=id).first()
+    return User.query.get_or_404(id, 'User Not Found')
 
 
 def get_user_by_username(username: str) -> User:
     return User.query.filter_by(username=username).first()
+
+
+def get_all_users() -> User:
+    return User.query.all()

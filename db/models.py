@@ -1,6 +1,7 @@
 from app import db, bcrypt
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, Integer, ForeignKey, Column
+from sqlalchemy import String, Integer, ForeignKey, Column, DateTime, Enum
+import enum
 
 
 workspace_admin_association_table = db.Table('workspace_admin',
@@ -30,6 +31,11 @@ task_assignment_association_table = db.Table('task_assignment',
                                              Column('task_id', Integer, ForeignKey(
                                                  'tasks.id'), primary_key=True)
                                              )
+
+
+class Status(enum.Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
 
 
 class User(db.Model):
@@ -63,6 +69,8 @@ class WorkSpace(db.Model):
     __tablename__ = 'workspaces'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name = mapped_column(type_=String(length=30), nullable=False)
+    description = mapped_column(type_=String(length=100))
 
     administrators = relationship(
         'User', secondary=workspace_admin_association_table, backref='workspaces')
@@ -75,9 +83,12 @@ class Project(db.Model):
     __tablename__ = 'projects'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name = mapped_column(type_=String(length=30), nullable=False)
+    start_date = mapped_column(type_=DateTime)
+    end_date = mapped_column(type_=DateTime)
 
     managers = relationship(
-        'User', secondary=project_manager_association_table, backref='projects')
+        'User', secondary=project_manager_association_table, backref='managed_projects')
 
     contributors = relationship(
         'User', secondary=project_contributor_association_table, backref='projects')
@@ -93,6 +104,14 @@ class Task(db.Model):
     __tablename__ = 'tasks'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name = mapped_column(type_=String(length=30), nullable=False)
+    start_date = mapped_column(type_=DateTime)
+    end_date = mapped_column(type_=DateTime)
+
+    status: Mapped[Status] = mapped_column(
+        Enum('pending', 'completed', name='status'), default=Status, )
+
+    completed_date = mapped_column(type_=DateTime)
 
     project_id: Mapped[int] = mapped_column(
         ForeignKey('projects.id'), nullable=True)
