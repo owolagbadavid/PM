@@ -42,7 +42,7 @@ def get_all():
 def create():
     try:
         data = request.json
-        workspace = create_workspace(data)
+        workspace = create_workspace(data, request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Workspace Created Successfully', 'workspace': model_to_dict(workspace)}), 201
@@ -62,3 +62,9 @@ def update(id: int):
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Workspace Updated Successfully', 'workspace': model_to_dict(workspace)}), 200
+
+
+@workspace_routes.route('<int:workspace_id>/add_administrator/<int:user_id>', methods=['PATCH'])
+def add_administrator(workspace_id: int, user_id: int):
+    workspace = add_administrator_to_workspace(workspace_id, user_id)
+    return jsonify({'msg': 'Administrator Added Successfully', 'workspace': model_to_dict(workspace)}), 200

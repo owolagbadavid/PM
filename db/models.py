@@ -84,6 +84,7 @@ class Project(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name = mapped_column(type_=String(length=30), nullable=False)
+    description = mapped_column(type_=String(length=100))
     start_date = mapped_column(type_=DateTime)
     end_date = mapped_column(type_=DateTime)
 
@@ -105,6 +106,7 @@ class Task(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name = mapped_column(type_=String(length=30), nullable=False)
+    description = mapped_column(type_=String(length=100))
     start_date = mapped_column(type_=DateTime)
     end_date = mapped_column(type_=DateTime)
 
