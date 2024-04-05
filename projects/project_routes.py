@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, BadRequest
 from app.middlewares.authentication import authenticate_user
 from .project_service import *
 from tasks.task_service import *
@@ -11,13 +11,6 @@ project_routes = Blueprint('project_routes', __name__)
 @project_routes.before_request
 def authenticate_before_request():
     authenticate_user()
-
-
-@project_routes.errorhandler(HTTPException)
-def handle_exception(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
 
 
 @project_routes.route('<int:id>', methods=['GET'])
@@ -82,8 +75,8 @@ def add_task(project_id: int):
 
 
 @project_routes.route('<int:project_id>/tasks/<int:task_id>', methods=['GET'])
-def task_by_id(task_id):
-    task = get_task_by_id(task_id)
+def task_by_id(project_id, task_id):
+    task = get_task_by_id(project_id, task_id)
     return jsonify({'msg': 'Task fetched Successfully', 'task': model_to_dict(task)})
 
 
@@ -92,3 +85,34 @@ def all_tasks(project_id):
     query_params = request.args.to_dict()
     tasks = get_all_tasks(project_id, query_params)
     return jsonify({'msg': 'Tasks fetched Successfully', 'tasks': [model_to_dict(task) for task in tasks]})
+
+
+@project_routes.route('<int:project_id>/tasks/<int:task_id>', methods=['PUT'])
+def update_task(project_id, task_id):
+    try:
+        data = request.json
+        task = update_task_by_id(project_id, task_id, data)
+    except HTTPException as e:
+        return jsonify(error=e.description), e.code
+    return jsonify({'msg': 'Task Updated Successfully', 'task': model_to_dict(task)}), 200
+
+
+@project_routes.route('<int:project_id>/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(project_id, task_id):
+    task = delete_task_by_id(project_id, task_id)
+    return jsonify({'msg': 'Task Deleted Successfully', 'task': model_to_dict(task)}), 200
+
+
+@project_routes.route('<int:project_id>/tasks/<int:task_id>/update_status', methods=['PATCH'])
+def update_task_status(project_id, task_id):
+    try:
+        data = request.json
+        if 'status' not in data:
+            raise BadRequest('Status is required')
+        if data['status'] not in ['pending', 'completed']:
+            raise BadRequest('Invalid Status')
+        status = data['status']
+        task = update_task_status_by_id(project_id, task_id, status)
+    except HTTPException as e:
+        return jsonify(error=e.description), e.code
+    return jsonify({'msg': 'Task Status Updated Successfully', 'task': model_to_dict(task)}), 200

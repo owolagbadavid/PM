@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from utils import model_to_dict
 from .user_service import *
-from werkzeug.exceptions import HTTPException
 from app.middlewares.authentication import authenticate_user
 
 
@@ -11,13 +10,6 @@ user_routes = Blueprint('user_routes', __name__)
 @user_routes.before_request
 def authenticate_before_request():
     authenticate_user()
-
-
-@user_routes.errorhandler(HTTPException)
-def handle_exception(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
 
 
 @user_routes.route('me')

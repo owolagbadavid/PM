@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from werkzeug.exceptions import Unauthorized, NotFound, HTTPException
+from werkzeug.exceptions import HTTPException
 from app.middlewares.authentication import authenticate_user
 from workspaces.workspace_service import *
 from utils import model_to_dict
@@ -10,20 +10,6 @@ workspace_routes = Blueprint('workspace_routes', __name__)
 @workspace_routes.before_request
 def authenticate_before_request():
     authenticate_user()
-
-
-@workspace_routes.errorhandler(Unauthorized)
-def handle_unauthorized(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
-
-
-@workspace_routes.errorhandler(NotFound)
-def handle_notfound(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
 
 
 @workspace_routes.route('<int:id>', methods=['GET'])
