@@ -2,16 +2,31 @@ from db.models import WorkSpace
 from app import db
 from werkzeug.exceptions import UnprocessableEntity, HTTPException
 from utils.validate_json import validate_json
-from .workspace_schemas import workspace_schema
+from .workspace_schemas import *
 from users.user_service import get_user_by_id
+from db import session
 
 
 def get_workspace_by_id(id: int) -> WorkSpace:
     return WorkSpace.query.get_or_404(id, 'Workspace Not Found')
 
 
-def get_all_workspaces() -> WorkSpace:
-    return WorkSpace.query.all()
+def get_all_workspaces(query_params) -> WorkSpace:
+    if query_params:
+        try:
+            validate_json(query_params, workspace_filter_schema)
+        except Exception as e:
+            raise UnprocessableEntity('Invalid query parameters')
+
+    query = session.query(WorkSpace)
+
+    if 'name' in query_params:
+        query = query.filter(WorkSpace.name.ilike(f"%{query_params['name']}%"))
+    if 'description' in query_params:
+        query = query.filter(WorkSpace.description.ilike(
+            f"%{query_params['description']}%"))
+
+    return query.all()
 
 
 def create_workspace(workspace_dto, user):

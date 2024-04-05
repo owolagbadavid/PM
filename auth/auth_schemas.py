@@ -14,7 +14,6 @@ register_schema = {
         "username": {"type": "string", "maxLength": 50},
         "email": {"format": "email"},
         "password": {"type": "string", "minLength": 6},
-        "passwordConfirm": {"type": "string", "minLength": 6},
     },
-    "required": ["username", "password", "passwordConfirm", "email"]
+    "required": ["username", "password", "email"]
 }

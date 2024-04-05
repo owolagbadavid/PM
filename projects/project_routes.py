@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from werkzeug.exceptions import Unauthorized, NotFound, HTTPException
+from werkzeug.exceptions import HTTPException
 from app.middlewares.authentication import authenticate_user
 from .project_service import *
 from tasks.task_service import *
@@ -13,15 +13,8 @@ def authenticate_before_request():
     authenticate_user()
 
 
-@project_routes.errorhandler(Unauthorized)
-def handle_unauthorized(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
-
-
-@project_routes.errorhandler(NotFound)
-def handle_notfound(error):
+@project_routes.errorhandler(HTTPException)
+def handle_exception(error):
     response = jsonify(error=str(error))
     response.status_code = error.code
     return response
@@ -35,7 +28,8 @@ def get_by_id(id: int):
 
 @project_routes.route('', methods=['GET'])
 def get_all():
-    projects = get_all_projects()
+    query_params = request.args.to_dict()
+    projects = get_all_projects(query_params)
     return jsonify({'msg': 'Projects Found Successfully', 'projects': [model_to_dict(project) for project in projects]}), 200
 
 
@@ -95,5 +89,6 @@ def task_by_id(task_id):
 
 @project_routes.route('<int:project_id>/tasks', methods=['GET'])
 def all_tasks(project_id):
-    tasks = get_all_tasks({'project_id': project_id})
+    query_params = request.args.to_dict()
+    tasks = get_all_tasks(project_id, query_params)
     return jsonify({'msg': 'Tasks fetched Successfully', 'tasks': [model_to_dict(task) for task in tasks]})

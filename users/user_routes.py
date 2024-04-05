@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from utils import model_to_dict
 from .user_service import *
-from werkzeug.exceptions import Unauthorized, NotFound
+from werkzeug.exceptions import HTTPException
 from app.middlewares.authentication import authenticate_user
 
 
@@ -13,15 +13,8 @@ def authenticate_before_request():
     authenticate_user()
 
 
-@user_routes.errorhandler(Unauthorized)
-def handle_unauthorized(error):
-    response = jsonify(error=str(error))
-    response.status_code = error.code
-    return response
-
-
-@user_routes.errorhandler(NotFound)
-def handle_notfound(error):
+@user_routes.errorhandler(HTTPException)
+def handle_exception(error):
     response = jsonify(error=str(error))
     response.status_code = error.code
     return response
@@ -44,7 +37,9 @@ def get_by_id(id):
 
 @user_routes.route('', methods=['GET'])
 def get_all():
-    users = get_all_users()
+    # get query parameters
+    query_params = request.args.to_dict()
+    users = get_all_users(query_params)
     users_list = [model_to_dict(user) for user in users]
     for user in users_list:
         user.pop('password_hash')

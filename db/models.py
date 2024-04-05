@@ -111,7 +111,7 @@ class Task(db.Model):
     end_date = mapped_column(type_=DateTime)
 
     status: Mapped[Status] = mapped_column(
-        Enum('pending', 'completed', name='status'), default=Status, )
+        Enum('pending', 'completed', name='status'), default=Status.PENDING.value, )
 
     completed_date = mapped_column(type_=DateTime)
 

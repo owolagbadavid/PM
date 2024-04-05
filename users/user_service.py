@@ -1,11 +1,14 @@
 from db.models import User
 from app import db
+from db import session
+from utils.validate_json import validate_json
+from .user_schemas import user_filter_schema
+from werkzeug.exceptions import UnprocessableEntity
 
 
 def create_user(user_dto):
     print('creating user', user_dto)
-    user = User(username=user_dto['username'],
-                email=user_dto['email'], password=user_dto['password'])
+    user = User(**user_dto)
     db.session.add(user)
     db.session.commit()
     return user
@@ -19,5 +22,19 @@ def get_user_by_username(username: str) -> User:
     return User.query.filter_by(username=username).first()
 
 
-def get_all_users() -> User:
-    return User.query.all()
+def get_all_users(query_params) -> User:
+    if query_params:
+        try:
+            validate_json(query_params, user_filter_schema)
+        except Exception as e:
+            raise UnprocessableEntity('Invalid query parameters')
+
+    query = session.query(User)
+
+    if 'username' in query_params:
+        query = query.filter(User.username.ilike(
+            f"%{query_params['username']}%"))
+    if 'email' in query_params:
+        query = query.filter(User.email.ilike(f"%{query_params['email']}%"))
+
+    return query.all()

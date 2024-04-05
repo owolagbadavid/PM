@@ -34,7 +34,8 @@ def get_by_id(id: int):
 
 @workspace_routes.route('', methods=['GET'])
 def get_all():
-    workspaces = get_all_workspaces()
+    query_params = request.args.to_dict()
+    workspaces = get_all_workspaces(query_params)
     return jsonify({'msg': 'Workspaces Found Successfully', 'workspaces': [model_to_dict(workspace) for workspace in workspaces]}), 200
 
 
