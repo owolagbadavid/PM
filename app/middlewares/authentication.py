@@ -13,3 +13,10 @@ def authenticate_user():
     except Exception as e:
         print(e)
         abort(401, 'Unauthorized')
+
+# check if user owns has access to requested resource
+
+
+def authorize_user(resouce, resource_id):
+    if resouce == 'workspace':
+        pass
