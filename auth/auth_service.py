@@ -2,7 +2,7 @@ from .auth_schemas import login_schema, register_schema
 from utils.validate_json import validate_json
 from users.user_service import create_user, get_user_by_username
 from utils import model_to_dict, sign_token
-from werkzeug.exceptions import Unauthorized, UnprocessableEntity
+from werkzeug.exceptions import Unauthorized, UnprocessableEntity, HTTPException
 
 
 def login_service(data):
@@ -21,6 +21,8 @@ def register_service(data):
         user = create_user(data)
     except Exception as e:
         print(e)
+        if isinstance(e, HTTPException):
+            raise e
         raise UnprocessableEntity('Error creating account! Try again later')
     user_dict = model_to_dict(user)
     user_dict.pop('password_hash')

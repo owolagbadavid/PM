@@ -5,11 +5,11 @@ from utils.validate_json import validate_json
 from .project_schemas import project_schema, project_filter_schema
 from workspaces.workspace_service import get_workspace_by_id
 from users.user_service import get_user_by_id
-from db import session
+from db import session, subqueryload
 
 
 def get_project_by_id(id: int) -> Project:
-    return Project.query.get_or_404(id, 'Project Not Found')
+    return Project.query.options(subqueryload(Project.tasks)).get_or_404(id, 'Project Not Found')
 
 
 def get_all_projects(query_params) -> Project:
@@ -88,9 +88,34 @@ def add_manager_to_project(project_id: int, user_id: int):
     return project
 
 
+def remove_manager_from_project(project_id: int, user_id: int):
+    project = get_project_by_id(project_id)
+    user = get_user_by_id(user_id)
+    if user == project.managers[0]:
+        raise UnprocessableEntity('Project owner cannot be removed as manager')
+    if user not in project.managers:
+        raise UnprocessableEntity('User is not a manager of this project')
+    project.managers.remove(user)
+    db.session.commit()
+    return project
+
+
 def add_contributor_to_project(project_id: int, user_id: int):
     project = get_project_by_id(project_id)
     user = get_user_by_id(user_id)
     project.contributors.append(user)
+    db.session.commit()
+    return project
+
+
+def remove_contributor_from_project(project_id: int, user_id: int):
+    project = get_project_by_id(project_id)
+    user = get_user_by_id(user_id)
+    if user not in project.contributors:
+        raise UnprocessableEntity('User is not a contributor of this project')
+    if user in project.managers:
+        raise UnprocessableEntity(
+            'User is a manager of this project! Remove user as manager first.')
+    project.contributors.remove(user)
     db.session.commit()
     return project

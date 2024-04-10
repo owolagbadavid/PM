@@ -75,3 +75,11 @@ def add_administrator_to_workspace(workspace_id: int, user_id: int):
     workspace.administrators.append(user)
     db.session.commit()
     return workspace
+
+
+def remove_administrator_from_workspace(workspace_id: int, user_id: int):
+    workspace = get_workspace_by_id(workspace_id)
+    user = get_user_by_id(user_id)
+    workspace.administrators.remove(user)
+    db.session.commit()
+    return workspace

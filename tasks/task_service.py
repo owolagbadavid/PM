@@ -5,12 +5,13 @@ from .task_schemas import task_schema, task_query_schema
 from projects.project_service import get_project_by_id
 from users.user_service import get_user_by_id
 from werkzeug.exceptions import UnprocessableEntity, HTTPException, NotFound
-from db import session
+from db import session, subqueryload
 from datetime import datetime
 
 
 def get_task_by_id(project_id, id: int) -> Task:
-    task: Task = Task.query.get_or_404(id, 'Task Not Found')
+    task: Task = Task.query.options(subqueryload(
+        Task.assigned_to)).get_or_404(id, 'Task Not Found')
     if task.project_id != project_id:
         raise NotFound('Task Not Found')
     return task

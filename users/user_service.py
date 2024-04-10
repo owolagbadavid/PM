@@ -8,9 +8,16 @@ from werkzeug.exceptions import UnprocessableEntity
 
 def create_user(user_dto):
     print('creating user', user_dto)
-    user = User(**user_dto)
-    db.session.add(user)
-    db.session.commit()
+    try:
+        user = User(**user_dto)
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        if 'unique constraint' in str(e):
+            raise UnprocessableEntity(
+                'User with email or username already exists')
+        raise e
     return user
 
 
