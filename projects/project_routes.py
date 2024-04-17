@@ -43,7 +43,7 @@ def create():
 
 @project_routes.route('<int:id>', methods=['DELETE'])
 def delete(id: int):
-    project = delete_project(id)
+    project = delete_project(id, request.user)
     return jsonify({'msg': 'Project Deleted Successfully', 'project': model_to_dict(project)}), 200
 
 
@@ -51,7 +51,7 @@ def delete(id: int):
 def update(id: int):
     try:
         data = request.json
-        project = update_project(id, data)
+        project = update_project(id, data, request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Project Updated Successfully', 'project': model_to_dict(project)}), 200
@@ -59,13 +59,14 @@ def update(id: int):
 
 @project_routes.route('<int:project_id>/add_manager/<int:user_id>', methods=['PATCH'])
 def add_manager(project_id: int, user_id: int):
-    project = add_manager_to_project(project_id, user_id)
+    project = add_manager_to_project(project_id, user_id, request.user)
     return jsonify({'msg': 'Manager Added Successfully', 'project': model_to_dict(project)}), 200
 
 
 @project_routes.route('<int:project_id>/add_contributor/<int:user_id>', methods=['PATCH'])
 def add_contributor(project_id: int, user_id: int):
-    project = add_contributor_to_project(project_id, user_id)
+    project = add_contributor_to_project(
+        project_id, user_id, request_user=request.user)
     return jsonify({'msg': 'Contributor Added Successfully', 'project': model_to_dict(project)}), 200
 
 # remove manager from project
@@ -73,7 +74,8 @@ def add_contributor(project_id: int, user_id: int):
 
 @project_routes.route('<int:project_id>/remove_manager/<int:user_id>', methods=['PATCH'])
 def remove_manager(project_id: int, user_id: int):
-    project = remove_manager_from_project(project_id, user_id)
+    project = remove_manager_from_project(
+        project_id, user_id, request_user=request.user)
     return jsonify({'msg': 'Manager Removed Successfully', 'project': model_to_dict(project)}), 200
 
 # remove contributor from project
@@ -81,7 +83,8 @@ def remove_manager(project_id: int, user_id: int):
 
 @project_routes.route('<int:project_id>/remove_contributor/<int:user_id>', methods=['PATCH'])
 def remove_contributor(project_id: int, user_id: int):
-    project = remove_contributor_from_project(project_id, user_id)
+    project = remove_contributor_from_project(
+        project_id, user_id, request_user=request.user)
     return jsonify({'msg': 'Contributor Removed Successfully', 'project': model_to_dict(project)}), 200
 
 

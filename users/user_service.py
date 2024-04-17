@@ -16,7 +16,7 @@ def create_user(user_dto):
         db.session.rollback()
         if 'unique constraint' in str(e):
             raise UnprocessableEntity(
-                'User with email or username already exists')
+                'User with that email already exists')
         raise e
     return user
 
@@ -25,8 +25,8 @@ def get_user_by_id(id: int) -> User:
     return User.query.get_or_404(id, 'User Not Found')
 
 
-def get_user_by_username(username: str) -> User:
-    return User.query.filter_by(username=username).first()
+def get_user_by_email(email: str) -> User:
+    return User.query.filter_by(email=email).first()
 
 
 def get_all_users(query_params) -> User:
@@ -38,10 +38,21 @@ def get_all_users(query_params) -> User:
 
     query = session.query(User)
 
-    if 'username' in query_params:
-        query = query.filter(User.username.ilike(
-            f"%{query_params['username']}%"))
+    page, count = 1, 10
+
+    if 'first_name' in query_params:
+        query = query.filter(User.first_name.ilike(
+            f"%{query_params['first_name']}%"))
+    if 'last_name' in query_params:
+        query = query.filter(User.last_name.ilike(
+            f"%{query_params['last_name']}%"))
     if 'email' in query_params:
         query = query.filter(User.email.ilike(f"%{query_params['email']}%"))
+    if 'page' in query_params:
+        page = int(query_params['page'])
+    if 'count' in query_params:
+        count = int(query_params['count'])
+
+    query = query.limit(count).offset((page - 1) * count)
 
     return query.all()

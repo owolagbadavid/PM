@@ -15,7 +15,15 @@ def authenticate_before_request():
 @workspace_routes.route('<int:id>', methods=['GET'])
 def get_by_id(id: int):
     workspace = get_workspace_by_id(id)
-    return jsonify({'msg': 'Workspace Found Successfully', 'workspace': model_to_dict(workspace)}), 200
+    workspace_dict = model_to_dict(workspace)
+    if workspace.administrators:
+        administrators = [model_to_dict(project)
+                          for project in workspace.administrators]
+        # del password from user dict
+        for admin in administrators:
+            del admin['password_hash']
+        workspace_dict['adminstrators'] = administrators
+    return jsonify({'msg': 'Workspace Found Successfully', 'workspace': workspace_dict}), 200
 
 
 @workspace_routes.route('', methods=['GET'])

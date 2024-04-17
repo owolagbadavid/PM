@@ -10,8 +10,7 @@ from datetime import datetime
 
 
 def get_task_by_id(project_id, id: int) -> Task:
-    task: Task = Task.query.options(subqueryload(
-        Task.assigned_to)).get_or_404(id, 'Task Not Found')
+    task: Task = Task.query.get_or_404(id, 'Task Not Found')
     if task.project_id != project_id:
         raise NotFound('Task Not Found')
     return task
@@ -26,6 +25,8 @@ def get_all_tasks(project_id, query_params=None) -> Task:
 
     query = session.query(Task)
 
+    page, count = 1, 10
+
     if 'name' in query_params:
         query = query.filter(Task.name.ilike(f"%{query_params['name']}%"))
     if 'description' in query_params:
@@ -39,6 +40,14 @@ def get_all_tasks(project_id, query_params=None) -> Task:
         query = query.filter(
             Task.status == query_params['status'])
     query = query.filter(Task.project_id == project_id)
+
+    if 'page' in query_params:
+        page = query_params['page']
+    if 'count' in query_params:
+        count = query_params['count']
+
+    query = query.limit(count).offset((page - 1) * count)
+
     return query.all()
 
 

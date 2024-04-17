@@ -1,19 +1,20 @@
 login_schema = {
     "type": "object",
     "properties": {
-        "username": {"type": "string", "maxLength": 50},
+        "email": {"format": "email"},  # "email": "string" is also valid
         "password": {"type": "string", "minLength": 6}
     },
-    "required": ["username", "password"]
+    "required": ["email", "password"]
 }
 
 
 register_schema = {
     "type": "object",
     "properties": {
-        "username": {"type": "string", "maxLength": 50},
+        "first_name": {"type": "string", "maxLength": 30},
+        "last_name": {"type": "string", "maxLength": 30},
         "email": {"format": "email"},
         "password": {"type": "string", "minLength": 6},
     },
-    "required": ["username", "password", "email"]
+    "required": ["first_name", "last_name", "password", "email"]
 }

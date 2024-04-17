@@ -18,6 +18,8 @@ task_query_schema = {
         "start_date": {"type": "string", "format": "date-time"},
         "end_date": {"type": "string", "format": "date-time"},
         "status": {"type": "string", "enum": ["pending", "completed"]},
+        "page": {"type": "integer"},
+        "count": {"type": "integer"},
     },
-    "optional": ["name", "description", "start_date", "end_date, status"]
+    "optional": ["name", "description", "start_date", "end_date, status", "page", "count"]
 }

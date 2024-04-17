@@ -2,6 +2,7 @@ from app import db, bcrypt
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, Integer, ForeignKey, Column, DateTime, Enum
 import enum
+from werkzeug.exceptions import Forbidden
 
 
 workspace_admin_association_table = db.Table('workspace_admin',
@@ -43,9 +44,11 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username = mapped_column(type_=String(length=30),
-                             nullable=False, unique=True
-                             )
+
+    first_name = mapped_column(type_=String(length=30), nullable=False)
+
+    last_name = mapped_column(type_=String(length=30), nullable=False)
+
     email = mapped_column(type_=String(
         length=50), nullable=False, unique=True
     )
@@ -77,6 +80,11 @@ class WorkSpace(db.Model):
 
     projects = relationship('Project', backref='owned_workspace', lazy=True)
 
+    def is_admin_or_403(self, user: User):
+        if user not in self.administrators:
+            raise Forbidden('You are not an admin of this workspace')
+        return self
+
 
 class Project(db.Model):
 
@@ -99,6 +107,16 @@ class Project(db.Model):
 
     tasks = relationship('Task', backref='owned_project', lazy=True)
 
+    def is_manager_or_403(self, user: User):
+        if user not in self.managers:
+            raise Forbidden('You are not a manager of this project')
+        return self
+
+    def is_contributor_or_403(self, user: User):
+        if user not in self.contributors:
+            raise Forbidden('You are not a contributor of this project')
+        return self
+
 
 class Task(db.Model):
 
@@ -120,3 +138,8 @@ class Task(db.Model):
 
     assigned_to = relationship(
         'User', secondary=task_assignment_association_table, backref='tasks')
+
+    def is_assigned_or_403(self, user: User):
+        if user not in self.assigned_to:
+            raise Forbidden('You are not assigned to this task')
+        return self

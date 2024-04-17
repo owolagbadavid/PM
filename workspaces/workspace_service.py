@@ -4,7 +4,7 @@ from werkzeug.exceptions import UnprocessableEntity, HTTPException
 from utils.validate_json import validate_json
 from .workspace_schemas import *
 from users.user_service import get_user_by_id
-from db import session
+from db import session, subqueryload
 
 
 def get_workspace_by_id(id: int) -> WorkSpace:
@@ -18,6 +18,8 @@ def get_all_workspaces(query_params) -> WorkSpace:
         except Exception as e:
             raise UnprocessableEntity('Invalid query parameters')
 
+    page, count = 1, 10
+
     query = session.query(WorkSpace)
 
     if 'name' in query_params:
@@ -25,6 +27,12 @@ def get_all_workspaces(query_params) -> WorkSpace:
     if 'description' in query_params:
         query = query.filter(WorkSpace.description.ilike(
             f"%{query_params['description']}%"))
+    if page in query_params:
+        page = int(query_params['page'])
+    if count in query_params:
+        count = int(query_params['count'])
+
+    query = query.limit(count).offset((page - 1) * count)
 
     return query.all()
 

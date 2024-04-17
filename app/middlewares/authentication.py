@@ -1,6 +1,10 @@
 from utils import verify_token
 from flask import request, abort
 from users.user_service import get_user_by_id
+from workspaces.workspace_service import get_workspace_by_id
+from projects.project_service import get_project_by_id
+from tasks.task_service import get_task_by_id
+from db.models import User
 
 
 def authenticate_user():
@@ -17,6 +21,16 @@ def authenticate_user():
 # check if user owns has access to requested resource
 
 
-def authorize_user(resouce, resource_id):
+def authorize_user(resouce, resource_id, user: User):
     if resouce == 'workspace':
-        pass
+        workspace = get_workspace_by_id(resource_id)
+        if user not in workspace.administrators:
+            abort(403, 'Forbidden')
+    elif resouce == 'project':
+        project = get_project_by_id(resource_id)
+        if user not in project.managers:
+            abort(403, 'Forbidden')
+    elif resouce == 'task':
+        task = get_task_by_id(resource_id)
+        if user not in task.assigned_to:
+            abort(403, 'Forbidden')
