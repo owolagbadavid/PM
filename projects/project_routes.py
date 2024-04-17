@@ -92,7 +92,7 @@ def remove_contributor(project_id: int, user_id: int):
 def add_task(project_id: int):
     try:
         data = request.json
-        task = create_task(data, project_id)
+        task = create_task(data, project_id, request_user=request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Task Created Successfully', 'task': model_to_dict(task)}), 201
@@ -122,7 +122,8 @@ def all_tasks(project_id):
 def update_task(project_id, task_id):
     try:
         data = request.json
-        task = update_task_by_id(project_id, task_id, data)
+        task = update_task_by_id(
+            project_id, task_id, data, request_user=request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Task Updated Successfully', 'task': model_to_dict(task)}), 200
@@ -130,7 +131,7 @@ def update_task(project_id, task_id):
 
 @project_routes.route('<int:project_id>/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(project_id, task_id):
-    task = delete_task_by_id(project_id, task_id)
+    task = delete_task_by_id(project_id, task_id, request_user=request.user)
     return jsonify({'msg': 'Task Deleted Successfully', 'task': model_to_dict(task)}), 200
 
 
@@ -143,7 +144,8 @@ def update_task_status(project_id, task_id):
         if data['status'] not in ['pending', 'completed']:
             raise BadRequest('Invalid Status')
         status = data['status']
-        task = update_task_status_by_id(project_id, task_id, status)
+        task = update_task_status_by_id(
+            project_id, task_id, status, request_user=request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Task Status Updated Successfully', 'task': model_to_dict(task)}), 200

@@ -5,7 +5,7 @@ from .task_schemas import task_schema, task_query_schema
 from projects.project_service import get_project_by_id
 from users.user_service import get_user_by_id
 from werkzeug.exceptions import UnprocessableEntity, HTTPException, NotFound
-from db import session, subqueryload
+from db import session
 from datetime import datetime
 
 
@@ -51,10 +51,10 @@ def get_all_tasks(project_id, query_params=None) -> Task:
     return query.all()
 
 
-def create_task(task_dto, project_id):
+def create_task(task_dto, project_id, request_user: User):
     try:
         validate_json(task_dto, task_schema)
-        get_project_by_id(project_id)
+        get_project_by_id(project_id).is_manager_or_403(request_user)
         task = Task(name=task_dto['name'], description=task_dto['description'], start_date=task_dto['start_date'], end_date=task_dto['end_date'],
                     project_id=project_id)
         users = []
@@ -74,10 +74,17 @@ def create_task(task_dto, project_id):
     return task
 
 
-def update_task_by_id(project_id, id, task_dto):
+def update_task_by_id(project_id, id, task_dto, request_user: User):
     try:
         validate_json(task_dto, task_schema)
-        task = get_task_by_id(project_id, id)
+
+        project = get_project_by_id(project_id).is_manager_or_403(request_user)
+
+        task: Task | None = next(
+            (task for task in project.tasks if task.id == id), None)
+        if not task:
+            raise NotFound('Task Not Found')
+
         task.name = task_dto['name']
         task.description = task_dto['description']
         task.start_date = task_dto['start_date']
@@ -97,9 +104,9 @@ def update_task_by_id(project_id, id, task_dto):
     return task
 
 
-def update_task_status_by_id(project_id, id, status):
+def update_task_status_by_id(project_id, id, status, request_user: User):
     try:
-        task = get_task_by_id(project_id, id)
+        task = get_task_by_id(project_id, id).is_assigned_or_403(request_user)
         if status == 'completed' and task.status != Status.COMPLETED.value:
             task.status = Status.COMPLETED.value
             task.completed_date = datetime.now()
@@ -115,13 +122,18 @@ def update_task_status_by_id(project_id, id, status):
     return task
 
 
-def delete_task_by_id(project_id, id):
+def delete_task_by_id(project_id, id, request_user: User):
     try:
-        task = get_task_by_id(project_id, id)
+        project = get_project_by_id(project_id).is_manager_or_403(request_user)
+
+        task = next((task for task in project.tasks if task.id == id), None)
+        if not task:
+            raise NotFound('Task Not Found')
         db.session.delete(task)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
+
         if isinstance(e, HTTPException):
             raise e
         raise UnprocessableEntity('Task could not be deleted')
