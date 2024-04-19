@@ -54,13 +54,16 @@ def get_all_tasks(project_id, query_params=None) -> Task:
 def create_task(task_dto, project_id, request_user: User):
     try:
         validate_json(task_dto, task_schema)
-        get_project_by_id(project_id).is_manager_or_403(request_user)
+        project = get_project_by_id(project_id).is_manager_or_403(request_user)
         task = Task(name=task_dto['name'], description=task_dto['description'], start_date=task_dto['start_date'], end_date=task_dto['end_date'],
                     project_id=project_id)
         users = []
         for user_id in task_dto['user_ids']:
-            users.append(get_user_by_id(user_id))
-        print(users)
+            user = get_user_by_id(user_id)
+            if user not in project.contributors:
+                raise UnprocessableEntity(
+                    f'User {user.first_name} {user.last_name} is not a contributor to this project! Add as a contibutor first')
+            users.append(user)
         for user in users:
             task.assigned_to.append(user)
         db.session.add(task)
@@ -71,6 +74,7 @@ def create_task(task_dto, project_id, request_user: User):
         if isinstance(e, HTTPException):
             raise e
         raise UnprocessableEntity('Task could not be created')
+    print(task.owned_project)
     return task
 
 
@@ -92,7 +96,11 @@ def update_task_by_id(project_id, id, task_dto, request_user: User):
         task.assigned_to = []
         users = []
         for user_id in task_dto['user_ids']:
-            users.append(get_user_by_id(user_id))
+            user = get_user_by_id(user_id)
+            if user not in project.contributors:
+                raise UnprocessableEntity(
+                    f'User {user.first_name} {user.last_name} is not a contributor to this project! Add as a contibutor first')
+            users.append(user)
         for user in users:
             task.assigned_to.append(user)
         db.session.commit()
@@ -101,6 +109,7 @@ def update_task_by_id(project_id, id, task_dto, request_user: User):
         if isinstance(e, HTTPException):
             raise e
         raise UnprocessableEntity('Task could not be updated')
+
     return task
 
 

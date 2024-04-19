@@ -18,19 +18,19 @@ def authenticate_user():
         print(e)
         abort(401, 'Unauthorized')
 
-# check if user owns has access to requested resource
+# # check if user owns has access to requested resource
 
 
-def authorize_user(resouce, resource_id, user: User):
-    if resouce == 'workspace':
-        workspace = get_workspace_by_id(resource_id)
-        if user not in workspace.administrators:
-            abort(403, 'Forbidden')
-    elif resouce == 'project':
-        project = get_project_by_id(resource_id)
-        if user not in project.managers:
-            abort(403, 'Forbidden')
-    elif resouce == 'task':
-        task = get_task_by_id(resource_id)
-        if user not in task.assigned_to:
-            abort(403, 'Forbidden')
+# def authorize_user(resouce, resource_id, user: User):
+#     if resouce == 'workspace':
+#         workspace = get_workspace_by_id(resource_id)
+#         if user not in workspace.administrators:
+#             abort(403, 'Forbidden')
+#     elif resouce == 'project':
+#         project = get_project_by_id(resource_id)
+#         if user not in project.managers:
+#             abort(403, 'Forbidden')
+#     elif resouce == 'task':
+#         task = get_task_by_id(resource_id)
+#         if user not in task.assigned_to:
+#             abort(403, 'Forbidden')

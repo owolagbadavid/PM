@@ -45,7 +45,7 @@ def create():
 
 @workspace_routes.route('<int:id>', methods=['DELETE'])
 def delete(id: int):
-    workspace = delete_workspace(id)
+    workspace = delete_workspace(id, request_user=request.user)
     return jsonify({'msg': 'Workspace Deleted Successfully', 'workspace': model_to_dict(workspace)}), 200
 
 
@@ -53,7 +53,7 @@ def delete(id: int):
 def update(id: int):
     try:
         data = request.json
-        workspace = update_workspace(id, data)
+        workspace = update_workspace(id, data, request_user=request.user)
     except HTTPException as e:
         return jsonify(error=e.description), e.code
     return jsonify({'msg': 'Workspace Updated Successfully', 'workspace': model_to_dict(workspace)}), 200
@@ -61,5 +61,6 @@ def update(id: int):
 
 @workspace_routes.route('<int:workspace_id>/add_administrator/<int:user_id>', methods=['PATCH'])
 def add_administrator(workspace_id: int, user_id: int):
-    workspace = add_administrator_to_workspace(workspace_id, user_id)
+    workspace = add_administrator_to_workspace(
+        workspace_id, user_id, request_user=request.user)
     return jsonify({'msg': 'Administrator Added Successfully', 'workspace': model_to_dict(workspace)}), 200

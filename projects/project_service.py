@@ -46,16 +46,17 @@ def get_all_projects(query_params) -> Project:
     return query.all()
 
 
-def create_project(project_dto, user: User):
+def create_project(project_dto, request_user: User):
     try:
         validate_json(project_dto, project_schema)
-        get_workspace_by_id(project_dto['workspace_id']).is_admin_or_403(user)
+        get_workspace_by_id(
+            project_dto['workspace_id']).is_admin_or_403(request_user)
 
         print(project_dto)
         project = Project(name=project_dto['name'], description=project_dto['description'],
                           start_date=project_dto['start_date'], end_date=project_dto['end_date'], workspace_id=project_dto['workspace_id'])
-        project.managers.append(user)
-        project.contributors.append(user)
+        project.managers.append(request_user)
+        project.contributors.append(request_user)
         db.session.add(project)
         db.session.commit()
     except Exception as e:

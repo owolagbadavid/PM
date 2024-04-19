@@ -55,17 +55,17 @@ def create_workspace(workspace_dto, user):
     return workspace
 
 
-def delete_workspace(id: int) -> WorkSpace:
-    workspace = get_workspace_by_id(id)
+def delete_workspace(id: int, request_user) -> WorkSpace:
+    workspace = get_workspace_by_id(id).is_admin_or_403(request_user)
     db.session.delete(workspace)
     db.session.commit()
     return workspace
 
 
-def update_workspace(id: int, workspace_dto) -> WorkSpace:
+def update_workspace(id: int, workspace_dto, request_user) -> WorkSpace:
     try:
         validate_json(workspace_dto, workspace_schema)
-        workspace = get_workspace_by_id(id)
+        workspace = get_workspace_by_id(id).is_admin_or_403(request_user)
         workspace.name = workspace_dto['name']
         workspace.description = workspace_dto['description']
         db.session.commit()
@@ -77,16 +77,19 @@ def update_workspace(id: int, workspace_dto) -> WorkSpace:
     return workspace
 
 
-def add_administrator_to_workspace(workspace_id: int, user_id: int):
-    workspace = get_workspace_by_id(workspace_id)
+def add_administrator_to_workspace(workspace_id: int, user_id: int, request_user):
+    workspace = get_workspace_by_id(workspace_id).is_admin_or_403(request_user)
     user = get_user_by_id(user_id)
     workspace.administrators.append(user)
     db.session.commit()
     return workspace
 
 
-def remove_administrator_from_workspace(workspace_id: int, user_id: int):
-    workspace = get_workspace_by_id(workspace_id)
+def remove_administrator_from_workspace(workspace_id: int, user_id: int, request_user):
+    workspace = get_workspace_by_id(workspace_id).is_admin_or_403(request_user)
+    if user_id == request_user.id:
+        raise UnprocessableEntity(
+            'You cannot remove yourself as an administrator')
     user = get_user_by_id(user_id)
     workspace.administrators.remove(user)
     db.session.commit()
