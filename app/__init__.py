@@ -6,7 +6,8 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
+# cors = CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://db:5432/pm?user=postgres"
 app.config['SECRET_KEY'] = '87ddc7dc2ca2f007ee13dca6'
